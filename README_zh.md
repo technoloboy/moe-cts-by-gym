@@ -1,12 +1,12 @@
 <div align="center">
   <h1 align="center">Go2 RL GYM</h1>
   <p align="center">
-    <a href="README.md">🌎 English</a> | <span>🇨🇳 中文</span> | <a href="https://arxiv.org/abs/2602.00678">📄 Paper</a>
+    <a href="README.md">🌎 English</a> | <span>🇨🇳 中文</span> | <a href="https://arxiv.org/abs/2602.00678">📄 Paper [RSS 2026]</a>
   </p>
 </div>
 
 <p align="center">
-  <strong>本仓库基于<a href="https://github.com/unitreerobotics/unitree_rl_gym">unitree_rl_gym</a>，使用强化学习训练Go2机器狗。</strong> 
+  <strong>本仓库基于<a href="https://github.com/unitreerobotics/unitree_rl_gym">unitree_rl_gym</a>，使用强化学习训练Go2机器狗。</br>基于IsaacLab开发的版本请见<a href="https://github.com/wertyuilife2/go2_rl_robotlab">go2_rl_robotlab</a>。</strong> 
 </p>
 
 <div align="center">
@@ -158,6 +158,10 @@ python deploy_real_go2.py eth0
 | Python部署 | C++部署 |
 | --- | --- |
 | ![python deploy](https://raw.githubusercontent.com/robogauge/picture-bed/refs/heads/main/deploy/py_deploy_with_commands.gif) | ![cpp deploy](https://raw.githubusercontent.com/robogauge/picture-bed/refs/heads/main/deploy/cpp_deploy_with_commands.gif) |
+
+C++ 部署效果：策略1/2/4由go2_rl_gym训练，策略3由[go2_rl_robotlab](https://github.com/wertyuilife2/go2_rl_robotlab)训练。
+
+https://github.com/user-attachments/assets/b72e10f2-ffdb-407d-bb1f-9d545e7f9f63
 
 ---
 

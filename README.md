@@ -1,12 +1,12 @@
 <div align="center">
 	<h1 align="center">Go2 RL GYM</h1>
 	<p align="center">
-		<span>🌎 English</span> | <a href="README_zh.md">🇨🇳 中文</a> | <a href="https://arxiv.org/abs/2602.00678">📄 Paper</a>
+		<span>🌎 English</span> | <a href="README_zh.md">🇨🇳 中文</a> | <a href="https://arxiv.org/abs/2602.00678">📄 Paper [RSS 2026]</a>
 	</p>
 </div>
 
 <p align="center">
-	<strong>This repository builds on <a href="https://github.com/unitreerobotics/unitree_rl_gym">unitree_rl_gym</a> to train the Unitree Go2 quadruped with reinforcement learning.</strong>
+	<strong>This repository builds on <a href="https://github.com/unitreerobotics/unitree_rl_gym">unitree_rl_gym</a> to train the Unitree Go2 quadruped with reinforcement learning.</br>For the IsaacLab-based version, see <a href="https://github.com/wertyuilife2/go2_rl_robotlab">go2_rl_robotlab</a>.</strong>
 </p>
 
 <div align="center">
@@ -158,6 +158,10 @@ Follow the usage described in [unitree_cpp_deploy](https://github.com/wty-yy/uni
 | Python Deploy | C++ Deploy |
 | --- | --- |
 | ![python deploy](https://raw.githubusercontent.com/robogauge/picture-bed/refs/heads/main/deploy/py_deploy_with_commands.gif) | ![cpp deploy](https://raw.githubusercontent.com/robogauge/picture-bed/refs/heads/main/deploy/cpp_deploy_with_commands.gif) |
+
+C++ Deployment: Policy 1/2/4 trained by go2_rl_gym, Policy 3 trained by [go2_rl_robotlab](https://github.com/wertyuilife2/go2_rl_robotlab).
+
+https://github.com/user-attachments/assets/b72e10f2-ffdb-407d-bb1f-9d545e7f9f63
 
 ---
 
