@@ -119,6 +119,7 @@ class OnPolicyRunnerCTS:
         except Exception as e:
             print(f"[INFO] RoboGauge client could not be initialized: {e}, disabling RoboGauge interface.")
             self.robogauge_client = None
+        self._logged_robogauge_steps: set[int] = set()
     
     def learn(self, num_learning_iterations, init_at_random_ep_len=False):
         # initialize writer
@@ -343,11 +344,14 @@ class OnPolicyRunnerCTS:
                     continue
                 if step == it:
                     result_received = True
+                if step in self._logged_robogauge_steps:
+                    continue
                 for key, val in scores.items():
                     self.writer.add_scalar(f'RoboGauge/{key}', val, step)
                 results_path = os.path.join(results_dir, f'results_{step}.yaml')
                 with open(results_path, 'w', encoding='utf-8') as f:
                     yaml.dump(results, f, allow_unicode=True, sort_keys=False)
+                self._logged_robogauge_steps.add(step)
             
             if last_model and result_received:
                 print(f"RoboGauge result for step {it} received. Exiting wait loop.")
