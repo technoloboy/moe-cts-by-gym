@@ -165,7 +165,7 @@ class BoyingCfg(LeggedRobotCfg):
             ang_vel_xy = -0.05
             dof_acc = -2.5e-7
             dof_power = -2e-5
-            torques = -1e-4
+            torques = -3e-5
             correct_base_height = -1.0
             action_rate = -0.01
             action_smoothness = -0.01
