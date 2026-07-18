@@ -162,17 +162,17 @@ class BoyingCfg(LeggedRobotCfg):
             tracking_lin_vel = 1.0
             tracking_ang_vel = 0.5
             lin_vel_z = -2.0
-            ang_vel_xy = -0.05
-            dof_acc = -2.5e-7
-            dof_power = -2e-5
+            ang_vel_xy = -0.02
+            dof_acc = -5e-8
+            dof_power = -1e-5
             torques = -3e-5
             correct_base_height = -1.0
             action_rate = -0.01
             action_smoothness = -0.01
             collision = -1.0
             dof_pos_limits = -2.0
-            feet_regulation = -0.05
-            hip_to_default = -0.05
+            feet_regulation = -0.1
+            hip_to_default = -0.03
 
         turn_over_roll_threshold = math.pi / 4
         class turn_over_scales:
