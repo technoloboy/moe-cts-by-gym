@@ -4,6 +4,9 @@ from legged_gym.envs.go2.go2_env import Go2Robot
 from legged_gym.envs.go2.go2_config import GO2Cfg, GO2CfgPPO, GO2CfgCTS, GO2CfgMoECTS, GO2CfgMoENGCTS, GO2CfgMCPCTS, GO2CfgACMoECTS, GO2CfgDualMoECTS
 from .base.legged_robot import LeggedRobot
 
+from legged_gym.envs.boying.boying_env import BoyingRobot
+from legged_gym.envs.boying.boying_config import BoyingCfg, BoyingCfgMoECTS
+
 from legged_gym.utils.task_registry import task_registry
 
 task_registry.register("go2", Go2Robot, GO2Cfg(), GO2CfgPPO())
@@ -13,3 +16,5 @@ task_registry.register("go2_moe_ng_cts", Go2Robot, GO2Cfg(), GO2CfgMoENGCTS())
 task_registry.register("go2_mcp_cts", Go2Robot, GO2Cfg(), GO2CfgMCPCTS())
 task_registry.register("go2_ac_moe_cts", Go2Robot, GO2Cfg(), GO2CfgACMoECTS())
 task_registry.register("go2_dual_moe_cts", Go2Robot, GO2Cfg(), GO2CfgDualMoECTS())
+
+task_registry.register("boying_moe_cts", BoyingRobot, BoyingCfg(), BoyingCfgMoECTS())
