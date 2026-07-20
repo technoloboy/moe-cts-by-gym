@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+
+<robot name="boying_description" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:include filename="$(find boying_description)/urdf/boying_description.urdf"/>
+    <xacro:include filename="$(find boying_description)/xacro/gazebo.xacro"/>
+
+</robot>
