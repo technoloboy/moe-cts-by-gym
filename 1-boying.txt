@@ -1,0 +1,141 @@
+export LD_LIBRARY_PATH=/usr/lib/wsl/lib:$LD_LIBRARY_PATH
+python legged_gym/scripts/train.py --task=boying_moe_cts --headless --num_envs=4096
+tensorboard --logdir /home/wkl/go2_rl_gym/logs/boying_moe_cts --host 0.0.0.0 --port 6006
+
+python legged_gym/scripts/train.py \
+      --task=boying_moe_cts \
+      --headless \
+      --resume \
+      --load_run=Jul20_01-11-30_\
+      --checkpoint=42500 
+
+
+奖励函数配置与机器人本体的关系：研究综述
+
+  核心结论
+
+  奖励函数结构（terms）基本通用，但惩罚项系数（scales）确实需要随机器人调整。
+  
+  ---
+  1. 奖励系数差异有多大？
+
+  AnyDrive（arxiv 2409.06366） 在 16 种四足机器人（含 Bittle 0.2kg、ANYmal、A1/Go1/Go2）上训练：
+  - 小型/轻型机器人需要更高的跟踪奖励系数：Bittle 的 xy 速度跟踪系数 T1=5.0，而 ANYmal/A1/Go1/Go2 只需 T1=2.0（差 2.5×）
+  - 双足/人形机器人的扭矩惩罚系数是四足的 1/10（2e-5 vs 2e-4），因为大关节力矩是必需的
+  - 但关键发现：用一组保守的通用系数在所有机器人上训练，性能只比各自调优的略差——说明单独调参是"工程精修"而非硬需求
+
+  physics-grounded energy reward（arxiv 2509.06342） 研究了能量惩罚系数差异：
+  - 同样的奖励公式，Minimal 机器人需要 -128×10⁻⁵ 的系数，ANYmal/Tytan 只需 -16×10⁻⁵（差 8×）
+  - 根本原因：不同机器人的功耗量级本身就相差 8 倍（18V vs 48V 总线）
+
+  实际对比（Walk These Ways + 本项目）：Go1/Go2（Kp=20）和 Boying（Kp=60）的合理扭矩惩罚系数差距约 3×，与上述规律吻合。
+
+  ---
+  2. 为什么会有这种差异？物理依据
+
+  奖励系数差异的根本来源是物理量纲不匹配：
+
+  ┌─────────────────────┬────────────────────────────────┬──────────┐
+  │      物理参数       │          影响的奖励项          │ 典型比例 │
+  ├─────────────────────┼────────────────────────────────┼──────────┤
+  │ 关节刚度 Kp（3×）   │ torques, dof_acc               │ 3-5×     │
+  ├─────────────────────┼────────────────────────────────┼──────────┤
+  │ 机器人质量（1.27×） │ contact_force, ang_vel_xy      │ ~1.3×    │
+  ├─────────────────────┼────────────────────────────────┼──────────┤
+  │ 功耗量级            │ energy/power penalty           │ 8×       │
+  ├─────────────────────┼────────────────────────────────┼──────────┤
+  │ 关节范围            │ hip_to_default, dof_pos_limits │ 比例缩放 │
+  └─────────────────────┴────────────────────────────────┴──────────┘
+
+  ROGER（arxiv 2510.10759） 证明了手动跨机器人调参的代价：调一个超参可能需要 4+ 次重训，因此提出了自适应增益机制，在线计算 λᵢₜ = r_λᵢₜ · Δₜ，消除手动转移的需要。
+
+  ---
+  3. 工业界的两种实践路线
+
+  路线 A（固定奖励 + 物理参数作为策略输入）：
+
+  RMA（arxiv 2107.04034）、McARL（arxiv 2505.18418）、单策略多机器人论文（arxiv 2310.10486）都使用这一路线：奖励函数权重固定，机器人的质量、刚度、关节范围等物理参数编码进 14-17
+  维向量，作为策略输入让网络自己适配。单策略多机器人（16种四足）用的是固定权重 w1=8.0（前进），w2=-0.25（朝向），w3=-0.00001（能量），完全不做机器人区分。
+
+  路线 B（基于 URDF 百分比的相对参数）：
+
+  arxiv 2310.10486 等论文提出：将奖励约束阈值、域随机化范围全部用机器人 URDF 标称值的百分比来定义，天然适配不同体型。这正是"物理感知"的设计方法。
+
+  ---
+  4. 对 Boying 训练的具体启示
+
+  当前 boying_moe_cts 的奖励配置已按这一原则调整：
+
+  ┌─────────────────────────────────────┬────────────────────────┬────────────────────────────────┐
+  │               调整项                │        调整依据        │          是否符合文献          │
+  ├─────────────────────────────────────┼────────────────────────┼────────────────────────────────┤
+  │ torques: -3e-5（go2 是 -1e-4）      │ Kp 3× → 期望扭矩大 3×  │ ✓ 与能量奖励 8× 差异的方向一致 │
+  ├─────────────────────────────────────┼────────────────────────┼────────────────────────────────┤
+  │ dof_acc: -5e-8（go2 是 -2.5e-7）    │ 高刚度关节加速度更大   │ ✓                              │
+  ├─────────────────────────────────────┼────────────────────────┼────────────────────────────────┤
+  │ max_contact_force: 187N（go2 147N） │ 质量比例 19.1/15.0     │ ✓                              │
+  ├─────────────────────────────────────┼────────────────────────┼────────────────────────────────┤
+  │ ang_vel_xy: -0.02（go2 是 -0.05）   │ 质量更大，惯量抵抗横滚 │ ✓ 方向正确                     │
+  └─────────────────────────────────────┴────────────────────────┴────────────────────────────────┘
+
+  ---
+  参考文献（来源 URL）
+
+  - RMA: https://arxiv.org/abs/2107.04034
+  - Extreme Parkour: https://arxiv.org/abs/2309.14341
+  - AnyDrive (16-robot): https://arxiv.org/abs/2409.06366
+  - Single policy for diverse quadrupeds: https://arxiv.org/html/2310.10486v2
+  - ROGER (adaptive reward gains): https://arxiv.org/html/2510.10759v1
+  - McARL: https://arxiv.org/abs/2505.18418
+  - Physics-grounded energy reward: https://arxiv.org/html/2509.06342v1
+  - Walk These Ways: https://arxiv.org/abs/2212.03238
+
+  ---
+  总结：奖励项（terms）可以跨机器人共用，但惩罚项系数需要按物理量纲比例调整，差异可达 2-8×。Boying 当前的配置已按比例调整，方向正确。如果继续出现训练崩溃，下一步可以考虑 ROGER
+  思路——让惩罚权重在训练中自适应而非固定。
+
+
+❯ /context 
+  ⎿  Context Usage
+     ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁   Sonnet 4.6
+     ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁   claude-sonnet-4-6
+     ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛀ ⛁ ⛁   86.2k/200k tokens (43%)
+     ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ 
+     ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛀ ⛶ ⛶ ⛶   Estimated usage by category
+     ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶   ⛁ System prompt: 55.1k tokens (27.5%)
+     ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶   ⛁ System tools: 29.9k tokens (15.0%)
+     ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶   ⛁ MCP tools: 4.4k tokens (2.2%)
+     ⛶ ⛶ ⛶ ⛝ ⛝ ⛝ ⛝ ⛝ ⛝ ⛝   ⛁ Skills: 1.4k tokens (0.7%)
+     ⛝ ⛝ ⛝ ⛝ ⛝ ⛝ ⛝ ⛝ ⛝ ⛝   ⛁ Messages: 625 tokens (0.3%)
+                           ⛶ Free space: 75.5k (37.8%)
+                           ⛝ Autocompact buffer: 33k tokens (16.5%)
+
+     Auto-compact window: 200k tokens
+
+     MCP tools · /mcp
+     ├ mcp__ide__executeCode: 2.9k tokens
+     └ mcp__ide__getDiagnostics: 1.6k tokens
+
+     Skills · /skills
+
+     Built-in
+     ├ dataviz: ~290 tokens
+     ├ claude-api: ~270 tokens
+     ├ update-config: ~180 tokens
+     ├ deep-research: ~120 tokens
+     ├ verify: ~100 tokens
+     ├ run: ~90 tokens
+     ├ code-review: ~90 tokens
+     ├ loop: ~80 tokens
+     ├ keybindings-help: ~60 tokens
+     ├ fewer-permission-prompts: ~50 tokens
+     ├ simplify: ~50 tokens
+     ├ security-review: ~20 tokens
+     ├ review: ~20 tokens
+     └ init: < 20 tokens
+
+      Suggestions
+      ℹ File reads using 26.5k tokens (13%) → save ~7.9k
+        If you are re-reading files, consider referencing earlier reads. Use offset/limit for large files.
+
+
