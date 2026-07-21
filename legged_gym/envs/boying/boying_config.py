@@ -1,7 +1,7 @@
 # boying_config.py
 # Boying 四足机器人的 IsaacGym 训练配置文件，用于 boying_moe_cts 任务。
 # 继承自 LeggedRobotCfg（环境配置）和 LeggedRobotCfgMoECTS（算法配置）。
-# 相比 Go2 的主要差异：质量 19.1kg（Go2 15kg）、Kp=60（Go2 Kp=20）、使用 withouthm URDF。
+# 相比 Go2 的主要差异：质量 19.1kg（Go2 15kg）、Kp=50（Go2 Kp=20）、使用 withouthm URDF。
 
 import math  # 用于 math.pi，计算翻转检测的 roll 角度阈值
 
@@ -42,10 +42,10 @@ class BoyingCfg(LeggedRobotCfg):
             'FR_hip_joint': -0.1,   # 右前髋，负值=内收方向（坐标系与左侧相反）
             'RR_hip_joint': -0.1,   # 右后髋，与右前髋对称
 
-            'FL_thigh_joint': 0.8,  # 左前大腿，单位 rad
-            'FR_thigh_joint': 0.8,  # 右前大腿
-            'RL_thigh_joint': 1.0,  # 左后大腿，后腿比前腿多弯 0.2 rad
-            'RR_thigh_joint': 1.0,  # 右后大腿
+            'FL_thigh_joint': 0.7,  # 左前大腿，单位 rad
+            'FR_thigh_joint': 0.7,  # 右前大腿
+            'RL_thigh_joint': 0.8,  # 左后大腿
+            'RR_thigh_joint': 0.8,  # 右后大腿
 
             'FL_calf_joint': -1.5,  # 左前小腿，负值=向后弯曲，单位 rad
             'FR_calf_joint': -1.5,  # 右前小腿
@@ -106,8 +106,8 @@ class BoyingCfg(LeggedRobotCfg):
         ### 环境重置时的随机化 ###
 
         randomize_pd_gains = True                    # 启用 PD 增益随机化，模拟电机参数误差
-        stiffness_multiplier_range = [0.9, 1.1]      # Kp 倍率范围（Boying Kp=60，±10% = 54~66）
-        damping_multiplier_range = [0.9, 1.1]        # Kd 倍率范围（Boying Kd=4.5，±10% = 4.05~4.95）
+        stiffness_multiplier_range = [0.9, 1.1]      # Kp 倍率范围（Boying Kp=50，±10% = 45~55）
+        damping_multiplier_range = [0.9, 1.1]        # Kd 倍率范围（Boying Kd=2.25，±10% = 2.025~2.475）
 
         randomize_motor_zero_offset = True           # 启用电机零位偏移随机化（模拟零位标定误差）
         motor_zero_offset_range = [-0.035, 0.035]    # 零位偏移范围，单位 rad（约 ±2°）
@@ -127,13 +127,13 @@ class BoyingCfg(LeggedRobotCfg):
     class control(LeggedRobotCfg.control):
         """
         关节控制器配置（PD 位置控制）。
-        Boying 使用比 Go2 刚度高 3 倍的参数（Kp=60 vs Go2 的 Kp=20），
-        这直接导致相同动作下输出力矩约 3 倍，奖励函数中 torques/dof_acc/dof_power 系数需相应减小。
+        Boying 使用比 Go2 刚度高 2.5 倍的参数（Kp=50 vs Go2 的 Kp=20），
+        这直接导致相同动作下输出力矩约 2.5 倍，奖励函数中 torques/dof_acc/dof_power 系数需相应减小。
         """
 
         control_type = 'P'          # 控制模式：'P' = PD 位置控制（策略输出目标关节角度）
-        stiffness = {'joint': 60.}  # 关节刚度 Kp，单位 N*m/rad。Boying=60，Go2=20，差 3 倍
-        damping = {'joint': 4.5}    # 关节阻尼 Kd，单位 N*m*s/rad。Boying=4.5，Go2=0.5
+        stiffness = {'joint': 50.}  # 关节刚度 Kp，单位 N*m/rad
+        damping = {'joint': 2.25}   # 关节阻尼 Kd，单位 N*m*s/rad
 
         # 动作缩放：目标角度 = action_scale × action + default_angle
         # 0.25 rad ≈ 14.3°，限制单步最大关节位移，防止过激动作
@@ -254,7 +254,7 @@ class BoyingCfg(LeggedRobotCfg):
 
         # 触发 episode 终止的 link 名称（机身碰地 = 摔倒 = 终止并重置）
         terminate_after_contacts_on = ["base"]
-
+        flip_visual_attachments = False 
         # 自碰撞过滤：0=启用自碰撞检测（相邻link间除外），1=完全禁用自碰撞
         self_collisions = 0
 
@@ -262,7 +262,7 @@ class BoyingCfg(LeggedRobotCfg):
         """
         奖励函数配置。
         所有惩罚项系数均根据 Boying 与 Go2 的物理参数差异进行了比例调整：
-          - torques/dof_acc/dof_power: Kp 差 3 倍 → 系数缩小 3-5 倍
+          - torques/dof_acc/dof_power: Kp 差 2.5 倍 → 系数缩小 2.5-4 倍
           - ang_vel_xy: 质量更重 → 系数适度缩小
           - feet_regulation: withouthm 足端在关节原点 → 系数适度增大
           - hip_to_default: 关节范围更窄 → 系数适度缩小
@@ -325,13 +325,13 @@ class BoyingCfg(LeggedRobotCfg):
                                      # Go2=-0.05；Boying 质量更重，惯性大，适度放宽为 -0.02
 
             dof_acc = -5e-8          # 关节加速度惩罚，抑制抖振和不平滑动作
-                                     # Go2=-2.5e-7；Boying Kp=60，高刚度导致加速度量级更大，缩小 5 倍
+                                     # Go2=-2.5e-7；Boying Kp=50，高刚度导致加速度量级更大，缩小 5 倍
 
             dof_power = -1e-5        # 关节功率惩罚（力矩 × 速度），鼓励节能运动
                                      # Go2=-2e-5；Boying 高力矩导致功率量级更大，缩小约 2 倍
 
             torques = -3e-5          # 关节力矩惩罚，防止过大电机输出
-                                     # Go2=-1e-4；Boying Kp=60 vs Go2 Kp=20，力矩约大 3 倍，缩小 ~3.3 倍
+                                     # Go2=-1e-4；Boying Kp=50 vs Go2 Kp=20，力矩约大 2.5 倍，缩小 ~2.5 倍
 
             correct_base_height = -1.0  # 机身高度偏差惩罚，配合 base_height_target=0.36m 使用
                                         # 实际系数由 curriculum_rewards 在 0→5000 iter 从 1.0 增至 10.0
