@@ -271,8 +271,8 @@ class BoyingCfg(LeggedRobotCfg):
         soft_dof_pos_limit = 0.9  # 关节位置软限制比例，超过 90% 的关节范围时触发惩罚
 
         # 机身目标高度，单位 m
-        # Boying withouthm 正向运动学估算站立高度约 0.336m，0.36m 略高于实际提供余量
-        base_height_target = 0.36
+        # Boying withouthm 运动学估算站立高度约 0.322m，目标高度与实际站立高度匹配
+        base_height_target = 0.32
 
         only_positive_rewards = False  # False = 允许总奖励为负（更严格的惩罚约束）
 
@@ -333,7 +333,7 @@ class BoyingCfg(LeggedRobotCfg):
             torques = -3e-5          # 关节力矩惩罚，防止过大电机输出
                                      # Go2=-1e-4；Boying Kp=50 vs Go2 Kp=20，力矩约大 2.5 倍，缩小 ~2.5 倍
 
-            correct_base_height = -1.0  # 机身高度偏差惩罚，配合 base_height_target=0.36m 使用
+            correct_base_height = -1.0  # 机身高度偏差惩罚，配合 base_height_target=0.32m 使用
                                         # 实际系数由 curriculum_rewards 在 0→5000 iter 从 1.0 增至 10.0
 
             action_rate = -0.01      # 动作变化率惩罚，抑制相邻步之间动作的剧烈变化
