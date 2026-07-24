@@ -90,17 +90,10 @@ class Terrain:
                                 length=self.width_per_env_pixels,
                                 vertical_scale=self.cfg.vertical_scale,
                                 horizontal_scale=self.cfg.horizontal_scale)
-        IS_HARD = True
-        if IS_HARD:
-            # hard
-            slope = 0.1 + difficulty * 0.52  # max: 29.6 degrees
-            step_height = 0.05 + 0.23 * difficulty  # max: 0.257 m
-            discrete_obstacles_height = 0.05 + difficulty * 0.25  # max: 0.275 m
-        else:
-            # default (easy)
-            slope = difficulty * 0.4  # max: 19.8 degrees
-            step_height = 0.05 + 0.18 * difficulty  # max: 0.212 m
-            discrete_obstacles_height = 0.05 + difficulty * 0.2  # max: 0.23 m
+        slope = 0.1 + difficulty * 0.52  # max: 29.6 degrees
+        # 楼梯和障碍高度上限由 cfg 控制，各任务可独立覆写
+        step_height = 0.05 + (getattr(self.cfg, 'max_step_height', 0.28) - 0.05) * difficulty
+        discrete_obstacles_height = 0.05 + (getattr(self.cfg, 'max_obstacle_height', 0.30) - 0.05) * difficulty
 
         stepping_stones_size = 1.5 * (1.05 - difficulty)
         stone_distance = 0.05 if difficulty==0 else 0.1
