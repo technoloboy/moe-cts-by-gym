@@ -150,10 +150,10 @@ class BoyingCfg(LeggedRobotCfg):
 
         max_init_terrain_level = 5  # 训练初始阶段的最高地形难度等级（0~9，5为中等）
 
-        # 楼梯单级最大高度和障碍物最大高度上限（difficulty=1.0 时），单位 m
-        # Boying 比 Go2 重（19.1kg vs 15kg），降低地形高度落差以匹配实际能力
-        max_step_height = 0.20      # 楼梯单级上限 0.20m（Go2 默认 0.28m）
-        max_obstacle_height = 0.20  # 障碍物上限 0.20m（Go2 默认 0.30m）
+        # 地形难度整体缩放系数：0.75 使所有地形参数缩小至原始的 75%
+        # 等效于：楼梯单级最大 ~0.192m，障碍最大 ~0.209m，坡度最大 ~22°
+        # Boying 质量 19.1kg > Go2 15kg，降低整体地形难度以匹配实际能力
+        difficulty_scale = 0.75
 
         # 各地形类型的采样比例，顺序：[wave, slope, rough_slope, stairs_up, stairs_down, obstacles, stepping_stones, gap, flat]
         # 当前配置偏向楼梯(0.25)和斜坡(0.20)，适合训练 Boying 的地形适应能力
@@ -387,5 +387,5 @@ class BoyingCfgMoECTS(LeggedRobotCfgMoECTS):
     class runner(LeggedRobotCfgMoECTS.runner):
         run_name = ''                       # 运行名称后缀（空字符串则自动使用时间戳）
         experiment_name = 'boying_moe_cts'  # 实验名称，对应日志目录 logs/boying_moe_cts/
-        max_iterations = 150000             # 最大训练迭代步数（约等于 Go2 的训练量）
+        max_iterations = 300000             # 最大训练迭代步数
         save_interval = 500                 # 每 500 步保存一次 checkpoint（model_500.pt, model_1000.pt ...）

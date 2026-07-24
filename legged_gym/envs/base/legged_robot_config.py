@@ -64,10 +64,9 @@ class LeggedRobotCfg(BaseConfig):
         # trimesh 专用：超过此坡度阈值的斜坡会被修正为垂直面（防止机器人穿透陡坡）
         slope_threshold = 0.75
 
-        # 楼梯单级最大高度和障碍物最大高度（difficulty=1.0 时的上限，单位 m）
-        # 默认值对应原始 IS_HARD=True 的参数：step_height=0.05+0.23d, obstacle_height=0.05+0.25d
-        max_step_height = 0.28      # 原始最大值 ~0.28m（0.05+0.23*1.0）
-        max_obstacle_height = 0.30  # 原始最大值 ~0.30m（0.05+0.25*1.0）
+        # 地形难度整体缩放系数（0~1），统一缩放所有地形参数（坡度/台阶/障碍/波浪）
+        # 默认 1.0 = 原始 IS_HARD 难度；各任务可覆写以降低整体地形难度
+        difficulty_scale = 1.0
 
         # True = 地形课程下降触发基于累计水平位移；False = 基于绝对位置
         # True 更公平：即使机器人在原地踏步也不会误触发课程升级
